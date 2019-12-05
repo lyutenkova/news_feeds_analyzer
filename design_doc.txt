@@ -1,0 +1,1 @@
+This doc contains information concerning all technical solutions and how the script works.

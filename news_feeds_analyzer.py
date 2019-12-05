@@ -101,12 +101,12 @@ def null_row_col(matrix, idx):
 
 
 def get_clusters(matrix):
-    repeated_clusters, unique_articles = [], []
+    repeated_clusters = []
 
     THRESHOLD = 0.55
 
     for i in range(len(matrix)):
-        if i not in unique_articles and all([i not in c for c in repeated_clusters]):
+        if all([i not in c for c in repeated_clusters]):
             cluster = set([i])
 
             for j in range(i+1, len(matrix)):
@@ -114,14 +114,12 @@ def get_clusters(matrix):
                     cluster.add(j)
                     null_row_col(matrix, j)
 
-            if len(cluster) == 1:
-                unique_articles.append(list(cluster)[0])
-            else:
+            if len(cluster) != 1:
                 repeated_clusters.append(cluster)
 
             null_row_col(matrix, i)
 
-    return repeated_clusters, unique_articles
+    return repeated_clusters
 
 
 def similarity(article_1, article_2):
@@ -133,7 +131,7 @@ def similarity(article_1, article_2):
 
 def _get_feed(newsfeed):
     articles = []
-    data = parse_newsfeed(newsfeed["link"])  # парсим каждую новостную ленту
+    data = parse_newsfeed(newsfeed["link"])  # parse each newsfeed
 
     for article in data.entries:
         articles.append(
@@ -156,7 +154,7 @@ def sort_by_mentions(clusters_list):
 
 
 if __name__ == "__main__":
-    # все новостные ленты из конфига (названия - ссылки)
+    # all newsfeeds from config file (titles - links)
     newsfeeds = read_json("./config.json")
     feeds = get_feeds(newsfeeds)
 
@@ -166,15 +164,15 @@ if __name__ == "__main__":
     for feed_idx, f in enumerate(feeds):
         for art_idx, art in enumerate(f.articles):
             titles.append(art.title)
-            # ссответсвие индекса в массиве titles индексу в feed
+            # compliance of the index in the array of titles and index of feed
             title_idx_to_feed_idx[len(titles)-1] = (feed_idx, art_idx)
 
-    matrix = build_adjacency_matrix(titles)  # матрица смежности
+    matrix = build_adjacency_matrix(titles)  # adjacency matrix for all articles by titles
 
-    most_mentioned_clusters, unique_articles = get_clusters(matrix)
+    most_mentioned_clusters = get_clusters(matrix)
 
-    sort_by_mentions(most_mentioned_clusters)  # отсортируем по кол-ву новостей в кластере
-    most_mentioned = []  # все данные по наиболее упомянутым новостям в порядке публикации (первая новость в кластере - первоисточник)
+    sort_by_mentions(most_mentioned_clusters)  # sort by amount of articles in cluster
+    most_mentioned = []  # first article - primary source
 
     for cl in most_mentioned_clusters:
         cluster = []
@@ -187,10 +185,5 @@ if __name__ == "__main__":
             cluster.sort(key=lambda item: item.pub_date, reverse=True)
 
         most_mentioned.append(cluster)
-
-    # for title_idx in unique_articles:
-    #     feed_idx, art_idx = title_idx_to_feed_idx[title_idx]
-    #     article = feeds[feed_idx].articles[art_idx] 
-    #     print(article.feed_idx)
 
     create_html_report(most_mentioned[:5], feeds)
