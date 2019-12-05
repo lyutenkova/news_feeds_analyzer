@@ -3,9 +3,6 @@ import datetime
 import feedparser
 import difflib
 import json
-import time
-
-from yattag import Doc
 
 
 class Feed:
@@ -156,7 +153,6 @@ def get_feeds(newsfeeds):
 
 def sort_by_mentions(clusters_list):
     clusters_list.sort(key=lambda l: len(l), reverse=True)
-
 
 
 if __name__ == "__main__":
