@@ -1,8 +1,13 @@
 import os
+import argparse
 import datetime
-import feedparser
 import difflib
 import json
+
+import feedparser
+
+
+THRESHOLD = 0.55
 
 
 class Feed:
@@ -38,79 +43,74 @@ def parse_newsfeed(link):
 
 
 def create_html_report(most_mentioned_art, feeds):
-    f = open('report.html','w')
+    with open('report.html','w') as f:
+        table_rows = "<tr><th>Number</th><th>Primary</th><th>Similar</th></tr>"
+        row_tmpl = "<tr><td>{idx}</td><td><a href={primary}>{primary_title}</a></td><td><ol>{articles}</ol></td></tr>"
+        
+        for index, cluster in enumerate(most_mentioned_art, start=1):
+            table_rows += row_tmpl.format(
+                idx=index,
+                primary=str(cluster[0].link),
+                primary_title=cluster[0].title,
+                articles="\n".join("<li><a href={art}>{art_title}</a></li>".format(art=str(art.link), art_title=art.title) for art in cluster[1:])
+            )
 
-    table_rows = "<tr><th>Number</th><th>Primary</th><th>Similar</th></tr>"
-    row = "<tr><td>{idx}</td><td><a href={primary}>{primary_title}</a></td><td><ol>{articles}</ol></td></tr>"
-    
-    for index, cluster in enumerate(most_mentioned_art):
-        table_rows += row.format(
-            idx=index+1,
-            primary=str(cluster[0].link),
-            primary_title=cluster[0].title,
-            articles="\n".join("<li><a href={art}>{art_title}</a></li>".format(art=str(art.link), art_title=art.title) for art in cluster[1:])
-        )
+        table_feed = "<tr><th>Feed</th><th>Amount</th><th>Unique articles</th></tr>"
+        feed_row = "<tr><td><a href={feed_link}>{feed_title}</a></td><td>{amount}</td><td><ol>{unique_articles}</ol></td></tr>"
 
-    table_feed = "<tr><th>Feed</th><th>Amount</th><th>Unique articles</th></tr>"
-    feed_row = "<tr><td><a href={feed_link}>{feed_title}</a></td><td>{amount}</td><td><ol>{unique_articles}</ol></td></tr>"
+        for feed in feeds:
+            table_feed += feed_row.format(
+                feed_link=feed.link,
+                feed_title=feed.title,
+                amount = feed.amount_articles,
+                unique_articles="\n".join("<li><a href={art}>{art_title}</a></li>".format(art=str(art.link), art_title=art.title) for art in feed.articles if art.is_unique)
+            )
 
-    for feed in feeds:
-        table_feed += feed_row.format(
-            feed_link=feed.link,
-            feed_title=feed.title,
-            amount = feed.amount_articles,
-            unique_articles="\n".join("<li><a href={art}>{art_title}</a></li>".format(art=str(art.link), art_title=art.title) for art in feed.articles if art.is_unique)
-        )
+        report = """<html>
+        <head>
+        <link rel="stylesheet" href="./style.css">
+        </head>
+        <body>
+        <table class="table">
+        <caption>Top 5 mentioned</caption>
+            {table_row}
+        </table>
+        <br/>
+        <br/>
+        <table class="table">
+        <caption>Feeds</caption>
+            {table_feed}
+        </table>
+        </body>
+        </html>""".format(table_row=table_rows, table_feed=table_feed)
 
-    report = """<html>
-    <head>
-    <link rel="stylesheet" href="./style.css">
-    </head>
-    <body>
-    <table class="table">
-    <caption>Top 5 mentioned</caption>
-        {table}
-    </table>
-    <br/>
-    <br/>
-    <table class="table">
-    <caption>Feeds</caption>
-        {table2}
-    </table>
-    </body>
-    </html>""".format(table=table_rows, table2=table_feed)
-
-    f.write(report)
-    f.close()
+        f.write(report)
 
 
 def build_adjacency_matrix(news_titles):
-    import numpy as np
-    adj_matrix = np.zeros((len(news_titles), len(news_titles)))
+    adj_matrix = [[0 for i in range(len(news_titles))] for i in range(len(news_titles))]
 
     for i in range(len(news_titles)):
         for j in range(i + 1, len(news_titles)):
-            adj_matrix[i, j] = adj_matrix[j, i] = similarity(news_titles[i], news_titles[j])
+            adj_matrix[i][j] = adj_matrix[j][i] = similarity(news_titles[i], news_titles[j])
 
     return adj_matrix
 
 
 def null_row_col(matrix, idx):
     for j in range(len(matrix[idx])):
-        matrix[idx, j] = matrix[j, idx] = 0
+        matrix[idx][j] = matrix[j][idx] = 0
 
 
 def get_clusters(matrix):
     repeated_clusters = []
-
-    THRESHOLD = 0.55
 
     for i in range(len(matrix)):
         if all([i not in c for c in repeated_clusters]):
             cluster = set([i])
 
             for j in range(i+1, len(matrix)):
-                if matrix[i, j] > THRESHOLD:
+                if matrix[i][j] > THRESHOLD:
                     cluster.add(j)
                     null_row_col(matrix, j)
 
@@ -129,7 +129,7 @@ def similarity(article_1, article_2):
     return matcher.ratio()
 
 
-def _get_feed(newsfeed):
+def get_feed(newsfeed):
     articles = []
     data = parse_newsfeed(newsfeed["link"])  # parse each newsfeed
 
@@ -146,7 +146,7 @@ def _get_feed(newsfeed):
 
 
 def get_feeds(newsfeeds):
-    return [_get_feed(newsfeed) for newsfeed in newsfeeds]
+    return [get_feed(newsfeed) for newsfeed in newsfeeds]
 
 
 def sort_by_mentions(clusters_list):
