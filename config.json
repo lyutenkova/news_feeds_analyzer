@@ -1,0 +1,40 @@
+{
+  "links": [
+    {
+      "title": "Huffingtonpost",
+      "link": "https://www.huffingtonpost.com/section/world-news/feed"
+    },
+    {
+      "title": "Reuters",
+      "link": "http://feeds.reuters.com/Reuters/worldNews"
+    },
+    {
+      "title": "Nytimes",
+      "link": "http://rss.nytimes.com/services/xml/rss/nyt/World.xml"
+    },    
+    {
+      "title": "CNN",
+      "link": "http://rss.cnn.com/rss/edition_world.rss"
+    },
+    {
+      "title": "BBC",
+      "link": "http://feeds.bbci.co.uk/news/world/rss.xml"
+    },
+    {
+      "title": "FOX News",
+      "link": "http://feeds.foxnews.com/foxnews/world"
+    },
+    {
+      "title": "USA Today",
+      "link": "http://rssfeeds.usatoday.com/UsatodaycomWorld-TopStories"
+    },
+    {
+      "title": "The Guardian",
+      "link": "https://www.theguardian.com/world/rss"
+    },
+    {
+      "title": "Washingtonpost",
+      "link": "http://feeds.washingtonpost.com/rss/world"
+    }
+  ]
+}
