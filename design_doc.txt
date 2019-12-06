@@ -5,10 +5,11 @@ It was necessary to obtain information from news feeds and identify three positi
 2. List of unique news for every news feed with links to news;
 3. Quantity of news in every news feed.
 
-Информация об источниках хранится в файле config.json. Для получения информации с новостных источников была использована сторонняя библиотека feedparser.
-Для хранения нужной нам информации по новостным лентам и по статьям были использованны классы Feed и Article.
-После парсинга ленты формируются экземпляры класса Feed со всей необходимой в дальнейшем информацией. Таким образом сформирован массив объектов feeds.
-Далее для выявления какие из новостей повторяются и в другом источнике я воспользовалась встроенной библиотекой difflib для сравнения строк на похожесть (были проверенны различные алгоритмы, но прирост в скорости работы был незначительный).
-Также для удобства я построила матрицу смежности по статьям, в ячейки которой писала коэффициент похожести.
-На основании матрицы я сформировала кластеры похожих новостей и отфильтровала их по дате публикации, чтобы найти первоисточник. Попутно я добавляла флаг is_unique=True тем новостям,
-которые не попадали в кластеры похожих новостей. 
+Information about the sources is stored in the config.json file. To obtain information from news sources was used a library - feedparser.
+To store the information we need on news feeds and articles were used classes Feed and Article.
+After parsing the feed, instances of class Feed are formed with all necessary further information. Thus formed a list of objects - feeds.
+Further, to identify which news is repeated, in another source I used the built-in library difflib to compare strings for similarity (various algorithms have been tested,
+but increase in speed was negligible).
+Also, for convenience, I built an adjacency matrix by articles, in the cells of which I wrote the similarity coefficient.
+Based on the matrix, I formed clusters of similar news and filtered them by publication date to find the primary source. 
+Along the way, I added a flag is_unique=True to the news which did not fall into clusters of similar news.
